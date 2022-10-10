@@ -1,11 +1,11 @@
 MPLINK 4.31, Linker
-Linker Map File - Created Tue Oct 04 15:14:09 2022
+Linker Map File - Created Thu Oct 06 20:38:57 2022
 
                                  Section Info
                   Section       Type    Address   Location Size(Bytes)
                 ---------  ---------  ---------  ---------  ---------
-                   .org_0       code   0x000000    program   0x000026
-                   .cinit    romdata   0x000013    program   0x000004
+                   .org_0       code   0x000000    program   0x00006e
+                   .cinit    romdata   0x000037    program   0x000004
       .config_2007_MAIN.O       code   0x002007    program   0x000002
 
 
@@ -13,19 +13,25 @@ Linker Map File - Created Tue Oct 04 15:14:09 2022
                               Program Memory Usage 
                                Start         End      
                            ---------   ---------      
-                            0x000000    0x000014      
+                            0x000000    0x000038      
                             0x002007    0x002007      
-            22 out of 2183 program addresses used, program memory utilization is 1%
+            58 out of 2183 program addresses used, program memory utilization is 2%
 
 
 
                               Symbols - Sorted by Name
                      Name    Address   Location    Storage File                     
                 ---------  ---------  ---------  --------- ---------                
-          INCREMENTO_TEMP   0x000008    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+          DECREMENTO_TEMP   0x000012    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+      ENCENDER_LED_MAXIMO   0x000029    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+      ENCENDER_LED_MINIMO   0x000030    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+          INCREMENTO_TEMP   0x00000b    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
                    INICIO   0x000000    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
-                  RETARDO   0x000010    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
-                RETARDO_0   0x00000e    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+      RETARDO_5SEGS_BUCLE   0x000023    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+  RETARDO_5SEGS_SUBRUTINA   0x000021    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+              RETARDO_LED   0x000018    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+            RETARDO_LED_0   0x00001a    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+            SET_CONTADOR2   0x00001e    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
 
 
 
@@ -33,8 +39,14 @@ Linker Map File - Created Tue Oct 04 15:14:09 2022
                      Name    Address   Location    Storage File                     
                 ---------  ---------  ---------  --------- ---------                
                    INICIO   0x000000    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
-          INCREMENTO_TEMP   0x000008    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
-                RETARDO_0   0x00000e    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
-                  RETARDO   0x000010    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+          INCREMENTO_TEMP   0x00000b    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+          DECREMENTO_TEMP   0x000012    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+              RETARDO_LED   0x000018    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+            RETARDO_LED_0   0x00001a    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+            SET_CONTADOR2   0x00001e    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+  RETARDO_5SEGS_SUBRUTINA   0x000021    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+      RETARDO_5SEGS_BUCLE   0x000023    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+      ENCENDER_LED_MAXIMO   0x000029    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
+      ENCENDER_LED_MINIMO   0x000030    program     static C:\Users\el3be\Documents\Practicas en Assembler\Termotanque\main.asm
 
 
