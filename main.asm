@@ -28,9 +28,9 @@ TEMP_ACT EQU 0x20		; Lo usaremos para decrementar
 TEMP_MIN EQU 0x21		; Lo usaremos como limite superior
 TEMP_MAX EQU 0x22		; Lo usaremos como limite inferior
 
-CONTADOR1 EQU 0x23	; Usado para el retardo de 5segs
-CONTADOR2 EQU 0x24	; Idem comentario anterior
-CONTADOR3 EQU 0x25	; Usado par el retardo de encendido de LED
+CONT EQU 0x23
+CONT2 EQU 0x24
+CONT3 EQU 0x25
 
 		ORG 0x00
 
@@ -39,17 +39,28 @@ CONTADOR3 EQU 0x25	; Usado par el retardo de encendido de LED
 ; Subrutina principal												   *
 ;**************************************************************************
 				
-INICIO	MOVLW D'35'
+INICIO	MOVLW D'0'
+		MOVWF TEMP_ACT
+
+		MOVLW D'35'
 		MOVWF TEMP_MIN		; Alojamos la temperatura mínima en 0x21
 
 		MOVLW D'70'			;
 		MOVWF TEMP_MAX		; Alojamos la temperatura máxima en 0x22
 		CALL INCREMENTO_TEMP	; Incrementamos en 1 a la temperatura actual, en la posición 0x20
-		CALL SET_CONTADOR2
 		CALL ENCENDER_LED_MAXIMO
-		CALL RETARDO_5SEGS_SUBRUTINA
+		CALL DELAY_1S		; Una vez que calienta el agua espera 5s
+		CALL DELAY_1S
+		CALL DELAY_1S
+		CALL DELAY_1S
+		CALL DELAY_1S
 		CALL DECREMENTO_TEMP
-		CALL ENCENDER_LED_MINIMO	
+		CALL ENCENDER_LED_MINIMO
+		CALL DELAY_1S
+		CALL DELAY_1S
+		CALL DELAY_1S
+		CALL DELAY_1S
+		CALL DELAY_1S		; Una vez que enfria tambien espera, es para que se vea bien en proteus
 		GOTO INICIO			; Bucle inf en INICIO
 			
 
@@ -90,38 +101,33 @@ DECREMENTO_TEMP				; DECREMENTA DESDE TEMP_MAX hasta TEMP_MIN
 
 		
 ;**************************************************************************
-; Subrutina de retardo para ver la luz del LED						   *
+; Subrutinas de retardo
 ;**************************************************************************
 
-RETARDO_LED
-		MOVLW D'250'
-		MOVWF CONTADOR3
-		
-RETARDO_LED_0	
-		NOP
-		DECFSZ CONTADOR3,F
-		GOTO RETARDO_LED_0
+DELAY_1MS	MOVLW D'250'
+			MOVWF CONT
+
+LOOP1	NOP
+		DECFSZ CONT,F
+		GOTO LOOP1
 		RETURN
 
-;**************************************************************************
-; Subrutinas de retardo aproximado 5 segs							   *
-;**************************************************************************
 
-SET_CONTADOR2
-		MOVLW D'100'			; Cargo el valor del segundo contador para el retardo
-		MOVWF CONTADOR2
-		RETURN	
+DELAY_250MS	MOVLW D'250'
+			MOVWF CONT2
 
-RETARDO_5SEGS_SUBRUTINA
-		MOVLW D'250'
-		MOVWF CONTADOR1
-			
-RETARDO_5SEGS_BUCLE				; BUCLE ANIDADO
-		NOP						; 1us
-		DECFSZ CONTADOR1,F		; Decremento desde 250 hasta 0
-		GOTO RETARDO_5SEGS_BUCLE	
-		DECFSZ CONTADOR2,F		; Una vez que salta decremento 1 unidad del contador 2 y 
-		GOTO RETARDO_5SEGS_SUBRUTINA	; Vuelvo a decrementar desde 250
+LOOP2	CALL DELAY_1MS
+		DECFSZ CONT2,F
+		GOTO LOOP2	
+		RETURN
+
+
+DELAY_1S	MOVLW D'4'
+		MOVWF CONT3
+
+LOOP3	CALL DELAY_250MS
+		DECFSZ CONT3,F
+		GOTO LOOP3	
 		RETURN
 
 
@@ -134,7 +140,7 @@ ENCENDER_LED_MAXIMO
 		BCF TRISB,1
 		BCF STATUS,RP0
 		BSF PORTB,1	; PRENDEMOS EL LED
-		CALL RETARDO_LED
+		CALL DELAY_1S
 		BCF PORTB,1
 		RETURN
 
@@ -144,7 +150,7 @@ ENCENDER_LED_MINIMO
 		BCF TRISB,2
 		BCF STATUS,RP0
 		BSF PORTB,2	; PRENDEMOS EL LED
-		CALL RETARDO_LED
+		CALL DELAY_1S
 		BCF PORTB,2
 		RETURN
 		
