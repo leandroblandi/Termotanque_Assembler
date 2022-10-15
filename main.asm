@@ -14,7 +14,7 @@
 ; Zona de datos														
 ;***************************************************************************
 
-		__CONFIG 3F01
+		__CONFIG 3F10
 		LIST		P=16F628A
 		INCLUDE	<P16F628A.INC>
 		ERRORLEVEL -302
@@ -23,23 +23,51 @@
 ;***************************************************************************
 ; Zona de codigos														
 ;***************************************************************************
-
-TEMP_ACT EQU 0x20		; Lo usaremos para decrementar
-TEMP_MIN EQU 0x21		; Lo usaremos como limite superior
-TEMP_MAX EQU 0x22		; Lo usaremos como limite inferior
-
-CONTADOR1 EQU 0x23	; Reservamos estas direcciones para los contadores
-CONTADOR2 EQU 0x24	; Nos serviran para contar tiempos por software
-CONTADOR3 EQU 0x25
+	
+		CBLOCK 0x20		; Reservamos una serie de direcciones de memoria para los alias
+		
+		TEMP_ACT			; 0x20
+		TEMP_MIN			; 0x21
+		TEMP_MAX			; 0x22
+		
+		CANILLA_ABIERTA	; 0x23
+				
+		CONTADOR1		; 0x24
+		CONTADOR2		; 0x25
+		CONTADOR3		; 0x26
+		CONTADOR4		; 0x27
+	
+		ENDC
 
 		ORG 0x00
+		
+		CALL CONFIGURAR_PUERTOS		; Configuramos los puertos de salida
+		CALL CONFIGURAR_SENSORES		; Seteamos los valores iniciales de los 'sensores'
+		GOTO INICIO
 
 
 ;**************************************************************************
 ; Subrutina principal												   
 ;**************************************************************************
 				
-INICIO	MOVLW D'0'			; Cargamos en W el valor inicial de la temperatura actual
+INICIO	
+		CALL CALENTAR_AGUA	; Que el agua comience a calentarse hasta el maximo
+
+		CALL DELAY_5S		; Una vez que calienta el agua espera 5s
+		
+		CALL ENFRIAR_AGUA		; Que el agua empiece a enfriarse
+
+		CALL DELAY_5S		; Una vez que se enfria el agua espera 5s
+		
+		GOTO INICIO			; Volvemos a inicio, logrando un bucle infinito
+
+
+;***************************************************************************
+; Subrutina de configuracion de sensores
+;***************************************************************************
+
+CONFIGURAR_SENSORES
+		MOVLW D'25'			; Cargamos en W el valor inicial de la temperatura actual
 		MOVWF TEMP_ACT		; Cargamos el valor de W en la temperatura actual
 
 		MOVLW D'35'			; Cargamos en W el valor de la temperatura minima
@@ -48,42 +76,30 @@ INICIO	MOVLW D'0'			; Cargamos en W el valor inicial de la temperatura actual
 		MOVLW D'70'			; Cargamos en W el valor de la temperatura maxima
 		MOVWF TEMP_MAX		; Cargamos el valor de W en la temperatura maxima
 		
-		CALL INCREMENTO_TEMP		; Que el agua comience a calentarse hasta el maximo
-		CALL ENCENDER_LED_MAXIMO	; Que se encienda el LED para avisar que ya esta caliente
+		CLRF CANILLA_ABIERTA	; Que por defecto la canilla este 'cerrada'
 		
-		CALL DELAY_1S			; Una vez que calienta el agua espera 5s
-		CALL DELAY_1S
-		CALL DELAY_1S
-		CALL DELAY_1S
-		CALL DELAY_1S
-		
-		CALL DECREMENTO_TEMP		; Que el agua empiece a enfriarse
-		CALL ENCENDER_LED_MINIMO	; Que se encienda el LED para avisar que se enfrio
-		
-		CALL DELAY_1S			; Una vez que se enfria el agua espera 5s
-		CALL DELAY_1S
-		CALL DELAY_1S
-		CALL DELAY_1S
-		CALL DELAY_1S
-		
-		GOTO INICIO			; Volvemos a inicio, logrando un bucle infinito
-			
+		RETURN
+
 
 ;***************************************************************************
 ; Subrutina que incrementa registro TEMP_ACT													*
 ;***************************************************************************
 		
-INCREMENTO_TEMP				; INCREMENTA DESDE 0 o TEMP_MIN hasta TEMP_MAX
-		INCF TEMP_ACT,F		; Vamos subiendo la temperatura actual	
+CALENTAR_AGUA						; Incrementa desde TEMP_ACT hasta TEMP_MAX (TEMP_ACT < TEMP_MAX)
 		
-		MOVFW TEMP_ACT		; Cargamos el registro W con el valor de TEMP_ACT
-		SUBWF TEMP_MAX,W		; Realizamos la resta entre la temperatura maxima y la actual
+		INCF TEMP_ACT,F			; Vamos subiendo la temperatura actual	
 		
-		BTFSS STATUS,Z		; Si la temperatura llego a su limite (se salta el GOTO)
+		CALL ENCENDER_LED_CALENTANDO_AGUA
+		
+		MOVFW TEMP_ACT			; Cargamos el registro W con el valor de TEMP_ACT
+		SUBWF TEMP_MAX,W			; Realizamos la resta entre la temperatura maxima y la actual
+		
+		BTFSS STATUS,Z			; Si la temperatura llego a su limite (se salta el GOTO)
 	
-		GOTO INCREMENTO_TEMP	; Si aun no llego que siga incrementando
+		GOTO CALENTAR_AGUA		; Si aun no llego que siga incrementando
 		
-		BCF STATUS,Z			; Limpiamos el bit Z del status para usarlo luego
+		BCF STATUS,Z				; Limpiamos el bit Z del status para usarlo luego
+		CALL ENCENDER_LED_MAXIMO	; Que se encienda el LED para avisar que ya esta caliente
 		
 		RETURN
 
@@ -92,16 +108,26 @@ INCREMENTO_TEMP				; INCREMENTA DESDE 0 o TEMP_MIN hasta TEMP_MAX
 ; Subrutina que decrementa registro TEMP_ACT							
 ;***************************************************************************
 
-DECREMENTO_TEMP				; DECREMENTA DESDE TEMP_MAX hasta TEMP_MIN
-
-		DECF TEMP_ACT,F	; Decrementamos la temperatura
-		MOVFW TEMP_MIN		; Cargamos el regisro W con el valor de TEMP_ACT
-		SUBWF TEMP_ACT,W		; Realizamos la resta entre la temperatura minima y la actual
+ENFRIAR_AGUA						; DECREMENTA DESDE TEMP_MAX hasta TEMP_MIN
+		DECF TEMP_ACT,F			; Decrementamos la temperatura en 1
+		BTFSC CANILLA_ABIERTA,0
+		CALL ENFRIAR_AGUA_MAS_RAPIDO
 		
-		BTFSS STATUS,Z		; Si la temperatura es la minima que deje de decrementar
+		MOVFW TEMP_MIN			; Cargamos el regisro W con el valor de TEMP_ACT
+		SUBWF TEMP_ACT,W			; Realizamos la resta entre la temperatura minima y la actual
 		
-		GOTO DECREMENTO_TEMP	; Sino, que continue
+		BTFSS STATUS,Z			; Si la temperatura es la minima que deje de decrementar
 		
+		GOTO ENFRIAR_AGUA			; Sino, que continue
+		
+		BCF STATUS,Z				; Limpiamos el bit Z del status
+		CALL ENCENDER_LED_MINIMO	; Que se encienda el LED para avisar que se enfrio
+		
+		RETURN
+		
+ENFRIAR_AGUA_MAS_RAPIDO
+		MOVLW D'5'				; Cargamos el valor a decrementar
+		SUBWF TEMP_ACT,F			; Restamos TEMP_ACT - 5 y lo guardamos en si mismo
 		RETURN
 
 		
@@ -135,27 +161,55 @@ RETARDO_3	CALL DELAY_250MS			; Esperamos 250 milisegundos por cada
 			GOTO RETARDO_3			; Repetimos la accion hasta que sea 0
 			RETURN
 
+DELAY_5S		MOVLW D'5'				; Cargamos el valor 4 en W
+			MOVWF CONTADOR4			; Cargamos el valor de W en el cuarto contador
+
+RETARDO_4	CALL DELAY_1S			; Esperamos 1 segundo por cada decremento
+			DECFSZ CONTADOR4,F		; del cuarto contador (1s x 5 = 5s)
+			GOTO RETARDO_4			; Repetimos la accion hasta que sea 0
+			RETURN
+
+;**************************************************************************
+; Subrutinas de configuracion de puertos									   
+;**************************************************************************
+
+CONFIGURAR_PUERTOS	
+		BSF	STATUS,RP0
+		MOVLW B'11111000'		; Seteamos RB0, RB1, RB2 como salida				
+		MOVWF TRISB
+		BCF STATUS,RP0
+		MOVLW B'00000000'
+		MOVWF PORTB
+		RETURN
+
 
 ;**************************************************************************
 ; Subrutinas para encender LEDS									   
 ;**************************************************************************
+
+ENCENDER_LED_CALENTANDO_AGUA
+		BCF STATUS,RP0
+		BSF PORTB,0
+		CALL DELAY_250MS
+		BCF PORTB,0
+		RETURN
 		
 ENCENDER_LED_MAXIMO
-		BSF STATUS,RP0	; Cambiamos al banco 1 para poder gestionar TRISB	
-		BCF TRISB,1		; Seteamos como salida el bit RB1
-		BCF STATUS,RP0	; Volvemos al banco 0 para gestionar PORTB
+		BCF STATUS,RP0
 		BSF PORTB,1		; Habilitamos el pin RB1, es decir, prendemos el LED
-		CALL DELAY_1S	; Retardo de 1 segundo
+		
+		CALL DELAY_250MS	; Retardo de 1 segundo
+		
 		BCF PORTB,1		; Deshabilitamos el pin RB2
 		RETURN
 
 
 ENCENDER_LED_MINIMO
-		BSF STATUS,RP0	; Cambiamos al banco 1 para poder gestionar TRISB
-		BCF TRISB,2		; Seteamos como salida el bit RB2
 		BCF STATUS,RP0	; Volvemos al banco 0 para gestionar PORTB
 		BSF PORTB,2		; Habilitamos el pin RB2, es decir, prendemos el LED
-		CALL DELAY_1S	; Retardo de 1 segundo
+		
+		CALL DELAY_250MS	; Retardo de 1 segundo
+		
 		BCF PORTB,2		; Deshabilitamos el pin RB2
 		RETURN
 		
