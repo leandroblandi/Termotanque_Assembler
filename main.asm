@@ -3,7 +3,7 @@
 ; Programa main.asm (PIC16F628A)						Fecha: 04-10-2022	
 ; Autor: Leandro N. Blandi												
 ; Este programa simula las temperaturas de agua de un termotanque, desde	
-; 35°C hasta 75°C, generando 5 segundos de retardo después de cada limite	
+; 35°C hasta 70°C, generando 5 segundos de retardo después de cada limite	
 ; - Velocidad del Reloj: 4MHz		- Tipo de Reloj: Interno				
 ; - Perro guardián: OFF												
 ; - Protección de código: OFF											
@@ -52,11 +52,9 @@
 				
 INICIO	
 		CALL CALENTAR_AGUA	; Que el agua comience a calentarse hasta el maximo
-
 		CALL DELAY_5S		; Una vez que calienta el agua espera 5s
 		
 		CALL ENFRIAR_AGUA		; Que el agua empiece a enfriarse
-
 		CALL DELAY_5S		; Una vez que se enfria el agua espera 5s
 		
 		GOTO INICIO			; Volvemos a inicio, logrando un bucle infinito
@@ -88,13 +86,13 @@ CONFIGURAR_SENSORES
 CALENTAR_AGUA						; Incrementa desde TEMP_ACT hasta TEMP_MAX (TEMP_ACT < TEMP_MAX)
 		
 		INCF TEMP_ACT,F			; Vamos subiendo la temperatura actual	
-		
-		CALL ENCENDER_LED_RESISTENCIA_PRENDIDA
+		CALL LED_RESISTENCIA_PRENDIDA
 		
 		MOVFW TEMP_ACT			; Cargamos el registro W con el valor de TEMP_ACT
 		SUBWF TEMP_MAX,W			; Realizamos la resta entre la temperatura maxima y la actual
 		
 		BTFSS STATUS,Z			; Si la temperatura llego a su limite (se salta el GOTO)
+		BTFSC STATUS,C			; Si la temperatura esta excedida del limite
 	
 		GOTO CALENTAR_AGUA		; Si aun no llego que siga incrementando
 		
@@ -110,10 +108,10 @@ CALENTAR_AGUA						; Incrementa desde TEMP_ACT hasta TEMP_MAX (TEMP_ACT < TEMP_M
 
 ENFRIAR_AGUA						; DECREMENTA DESDE TEMP_MAX hasta TEMP_MIN
 		DECF TEMP_ACT,F			; Decrementamos la temperatura en 1
-		BTFSC CANILLA_ABIERTA,0
-		CALL ENFRIAR_AGUA_MAS_RAPIDO
+		CALL LED_RESISTENCIA_APAGADA
 		
-		CALL ENCENDER_LED_RESISTENCIA_APAGADA
+		BTFSC CANILLA_ABIERTA,0		; Si la canilla esta abierta
+		CALL ENFRIAR_AGUA_MAS_RAPIDO	; Entonces que decremente de a 5
 		
 		MOVFW TEMP_MIN			; Cargamos el regisro W con el valor de TEMP_ACT
 		SUBWF TEMP_ACT,W			; Realizamos la resta entre la temperatura minima y la actual
@@ -177,8 +175,9 @@ RETARDO_4	CALL DELAY_1S			; Esperamos 1 segundo por cada decremento
 
 CONFIGURAR_PUERTOS	
 		BSF	STATUS,RP0
-		MOVLW B'11110000'		; Seteamos RB0, RB1, RB2 como salida				
+		MOVLW B'11110000'		; Seteamos RB0, RB1, RB2 como salida	
 		MOVWF TRISB
+		
 		BCF STATUS,RP0
 		MOVLW B'00000000'
 		MOVWF PORTB
@@ -189,7 +188,7 @@ CONFIGURAR_PUERTOS
 ; Subrutinas para encender LEDS									   
 ;**************************************************************************
 
-ENCENDER_LED_RESISTENCIA_APAGADA
+LED_RESISTENCIA_APAGADA
 		BCF STATUS,RP0
 		BSF PORTB,0
 		CALL DELAY_250MS
@@ -207,7 +206,7 @@ ENCENDER_LED_MAXIMO
 		RETURN
 
 
-ENCENDER_LED_RESISTENCIA_PRENDIDA
+LED_RESISTENCIA_PRENDIDA
 		BCF STATUS,RP0
 		BSF PORTB,2
 		CALL DELAY_250MS
