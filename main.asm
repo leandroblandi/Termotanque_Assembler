@@ -51,6 +51,7 @@
 ;**************************************************************************
 				
 INICIO	
+		COMF CANILLA_ABIERTA,F
 		CALL CALENTAR_AGUA	; Que el agua comience a calentarse hasta el maximo
 		CALL DELAY_5S		; Una vez que calienta el agua espera 5s
 		
@@ -82,8 +83,20 @@ CONFIGURAR_SENSORES
 ;***************************************************************************
 ; Subrutina que incrementa registro TEMP_ACT													*
 ;***************************************************************************
+
+CALENTAR_AGUA
+		MOVFW TEMP_ACT		; ta=70
+		SUBWF TEMP_MAX,W		; w = tm - ta (70 - 75)
+							; STATUS,CARRY = 0 (resta negativa)
+		BTFSC STATUS,C		; Si TEMP_ACT > TEMP_ACT salta
+		CALL CALENTAR_AGUA_0
+
+		CALL ENCENDER_LED_MAXIMO	; Que se encienda el LED para avisar que ya esta caliente
+
+		RETURN
 		
-CALENTAR_AGUA						; Incrementa desde TEMP_ACT hasta TEMP_MAX (TEMP_ACT < TEMP_MAX)
+		
+CALENTAR_AGUA_0					; Incrementa desde TEMP_ACT hasta TEMP_MAX (TEMP_ACT < TEMP_MAX)
 		
 		INCF TEMP_ACT,F			; Vamos subiendo la temperatura actual	
 		CALL LED_RESISTENCIA_PRENDIDA
@@ -92,12 +105,7 @@ CALENTAR_AGUA						; Incrementa desde TEMP_ACT hasta TEMP_MAX (TEMP_ACT < TEMP_M
 		SUBWF TEMP_MAX,W			; Realizamos la resta entre la temperatura maxima y la actual
 		
 		BTFSS STATUS,Z			; Si la temperatura llego a su limite (se salta el GOTO)
-		BTFSC STATUS,C			; Si la temperatura esta excedida del limite
-	
-		GOTO CALENTAR_AGUA		; Si aun no llego que siga incrementando
-		
-		BCF STATUS,Z				; Limpiamos el bit Z del status para usarlo luego
-		CALL ENCENDER_LED_MAXIMO	; Que se encienda el LED para avisar que ya esta caliente
+		GOTO CALENTAR_AGUA_0		; Si aun no llego que siga incrementando
 		
 		RETURN
 
