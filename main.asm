@@ -1,12 +1,13 @@
 
 ;***************************************************************************
-; Programa main.asm (PIC16F628A)						Fecha: 04-10-2022	
+; Programa main.asm (PIC16F628A)	Fecha de inicio de proyecto: 04-10-2022	
 ; Autor: Leandro N. Blandi												
 ; Este programa simula las temperaturas de agua de un termotanque, desde	
-; 35°C hasta 70°C, generando 5 segundos de retardo después de cada limite	
+; 35°C hasta 70°C, generando 5 segundos de retardo después de cada limite
+; implementando un registro CANILLA_ABIERTA que varia la velocidad de 
+; enfriamiento.
 ; - Velocidad del Reloj: 4MHz		- Tipo de Reloj: Interno				
-; - Perro guardián: OFF												
-; - Protección de código: OFF											
+; - Perro guardián: OFF			- Protección de código: OFF											
 ;***************************************************************************
 
 
@@ -27,15 +28,15 @@
 		CBLOCK 0x20		; Reservamos una serie de direcciones de memoria para los alias
 		
 		TEMP_ACT			; 0x20	Esta temperatura sera dinamica
-		TEMP_MIN			; 0x21	Estas dos, serviran como limites
-		TEMP_MAX			; 0x22
+		TEMP_MIN			; 0x21	Este servira como limite inferior
+		TEMP_MAX			; 0x22	'''  '''     '''  '''    superior
 		
 		CANILLA_ABIERTA	; 0x23	Este registro se ira complementando
 				
 		CONTADOR1		; 0x24	Registros para los retardos
-		CONTADOR2		; 0x25
-		CONTADOR3		; 0x26
-		CONTADOR4		; 0x27
+		CONTADOR2		; 0x25	'''
+		CONTADOR3		; 0x26	'''
+		CONTADOR4		; 0x27	'''
 	
 		ENDC
 
