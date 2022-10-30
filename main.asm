@@ -42,8 +42,8 @@
 
 		ORG 0x00
 		
-		CALL CONFIGURAR_PUERTOS		; Configuramos los puertos de salida
-		CALL CONFIGURAR_SENSORES		; Seteamos los valores iniciales de los 'sensores'
+		CALL CONFIGURAR_PUERTOS	; Configuramos los puertos de salida
+		CALL CONFIGURAR_SENSORES	; Seteamos los valores iniciales de los 'sensores'
 		GOTO INICIO
 
 
@@ -54,13 +54,13 @@
 INICIO	
 		COMF CANILLA_ABIERTA,F	; Complementa el registro canilla
 		
-		CALL CALENTAR_AGUA		; Que el agua comience a calentarse hasta el maximo
-		CALL DELAY_5S			; Una vez que calienta el agua espera 5s
+		CALL CALENTAR_AGUA	; Que el agua comience a calentarse hasta el maximo
+		CALL DELAY_5S		; Una vez que calienta el agua espera 5s
 		
-		CALL ENFRIAR_AGUA			; Que el agua empiece a enfriarse
-		CALL DELAY_5S			; Una vez que se enfria el agua espera 5s
+		CALL ENFRIAR_AGUA		; Que el agua empiece a enfriarse
+		CALL DELAY_5S		; Una vez que se enfria el agua espera 5s
 		
-		GOTO INICIO				; Volvemos a inicio, logrando un bucle infinito
+		GOTO INICIO			; Volvemos a inicio, logrando un bucle infinito
 
 
 ;***************************************************************************
