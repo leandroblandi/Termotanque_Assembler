@@ -51,14 +51,14 @@
 ;**************************************************************************
 				
 INICIO	
-		COMF CANILLA_ABIERTA,F
-		CALL CALENTAR_AGUA	; Que el agua comience a calentarse hasta el maximo
-		CALL DELAY_5S		; Una vez que calienta el agua espera 5s
+		COMF CANILLA_ABIERTA,F	; Complementa el registro canilla
+		CALL CALENTAR_AGUA		; Que el agua comience a calentarse hasta el maximo
+		CALL DELAY_5S			; Una vez que calienta el agua espera 5s
 		
-		CALL ENFRIAR_AGUA		; Que el agua empiece a enfriarse
-		CALL DELAY_5S		; Una vez que se enfria el agua espera 5s
+		CALL ENFRIAR_AGUA			; Que el agua empiece a enfriarse
+		CALL DELAY_5S			; Una vez que se enfria el agua espera 5s
 		
-		GOTO INICIO			; Volvemos a inicio, logrando un bucle infinito
+		GOTO INICIO				; Volvemos a inicio, logrando un bucle infinito
 
 
 ;***************************************************************************
@@ -96,7 +96,7 @@ CALENTAR_AGUA
 		RETURN
 		
 		
-CALENTAR_AGUA_0					; Incrementa desde TEMP_ACT hasta TEMP_MAX (TEMP_ACT < TEMP_MAX)
+CALENTAR_AGUA_0	
 		
 		INCF TEMP_ACT,F			; Vamos subiendo la temperatura actual	
 		CALL LED_RESISTENCIA_PRENDIDA
@@ -114,12 +114,12 @@ CALENTAR_AGUA_0					; Incrementa desde TEMP_ACT hasta TEMP_MAX (TEMP_ACT < TEMP_
 ; Subrutina que decrementa registro TEMP_ACT							
 ;***************************************************************************
 
-ENFRIAR_AGUA						; DECREMENTA DESDE TEMP_MAX hasta TEMP_MIN
-		MOVFW TEMP_MIN			; Cargamos el regisro W con el valor de TEMP_ACT
-		SUBWF TEMP_ACT,W			; Realizamos la resta entre la temperatura minima y la actual
+ENFRIAR_AGUA
+		MOVFW TEMP_MIN			; Verificamos que la temperatura actual sea mayor que
+		SUBWF TEMP_ACT,W			; la minima mediante la resta W = TEMP_ACT - TEMP_MIN
 		
-		BTFSC STATUS,C			; Si la temperatura es la minima que deje de decrementar
-		CALL ENFRIAR_AGUA_0
+		BTFSC STATUS,C			; Si la temperatura es menor que la minima, que salte
+		CALL ENFRIAR_AGUA_0		; Sino que decremente
 
 		CALL ENCENDER_LED_MINIMO	; Que se encienda el LED para avisar que se enfrio
 		
