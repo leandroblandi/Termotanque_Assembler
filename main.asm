@@ -53,6 +53,7 @@
 				
 INICIO	
 		COMF CANILLA_ABIERTA,F	; Complementa el registro canilla
+		
 		CALL CALENTAR_AGUA		; Que el agua comience a calentarse hasta el maximo
 		CALL DELAY_5S			; Una vez que calienta el agua espera 5s
 		
@@ -86,11 +87,11 @@ CONFIGURAR_SENSORES
 ;***************************************************************************
 
 CALENTAR_AGUA
-		MOVFW TEMP_ACT		; ta=70
-		SUBWF TEMP_MAX,W		; w = tm - ta (70 - 75)
-							; STATUS,CARRY = 0 (resta negativa)
-		BTFSC STATUS,C		; Si TEMP_ACT > TEMP_ACT salta
-		CALL CALENTAR_AGUA_0
+		MOVFW TEMP_ACT		; Restamos TEMP_MAX - TEMP_ACT
+		SUBWF TEMP_MAX,W		; Para cerciorarnos de que TEMP_ACT > TEMP_ACT
+
+		BTFSC STATUS,C		; Si TEMP_ACT > TEMP_MAX salta
+		CALL CALENTAR_AGUA_0	; Si TEMP_ACT < TEM_MAX ejecuta CALENTAR_AGUA_0
 
 		CALL ENCENDER_LED_MAXIMO	; Que se encienda el LED para avisar que ya esta caliente
 
@@ -99,14 +100,14 @@ CALENTAR_AGUA
 		
 CALENTAR_AGUA_0	
 		
-		INCF TEMP_ACT,F			; Vamos subiendo la temperatura actual	
+		INCF TEMP_ACT,F			; Es como TEMP_ACT = TEMP_ACT + 1	
 		CALL LED_RESISTENCIA_PRENDIDA
 		
-		MOVFW TEMP_ACT			; Cargamos el registro W con el valor de TEMP_ACT
-		SUBWF TEMP_MAX,W			; Realizamos la resta entre la temperatura maxima y la actual
+		MOVFW TEMP_ACT			; Restamos TEMP_MAX - TEMP_ACT
+		SUBWF TEMP_MAX,W			; Si son iguales, el Z del status tiene que ser 1
 		
-		BTFSS STATUS,Z			; Si la temperatura llego a su limite (se salta el GOTO)
-		GOTO CALENTAR_AGUA_0		; Si aun no llego que siga incrementando
+		BTFSS STATUS,Z			; Salta si STATUS,Z es 1
+		GOTO CALENTAR_AGUA_0		; Si no llego que siga incrementando
 		
 		RETURN
 
@@ -120,8 +121,8 @@ ENFRIAR_AGUA
 		SUBWF TEMP_ACT,W			; la minima mediante la resta W = TEMP_ACT - TEMP_MIN
 		
 		BTFSC STATUS,C			; Si la temperatura es menor que la minima, que salte
+		
 		CALL ENFRIAR_AGUA_0		; Sino que decremente
-
 		CALL ENCENDER_LED_MINIMO	; Que se encienda el LED para avisar que se enfrio
 		
 		RETURN
@@ -134,10 +135,9 @@ ENFRIAR_AGUA_0
 		CALL ENFRIAR_AGUA_MAS_RAPIDO	; Entonces que decremente de a 5
 		
 		MOVFW TEMP_MIN			; Cargamos el regisro W con el valor de TEMP_ACT
-		SUBWF TEMP_ACT,W			; Realizamos la resta entre la temperatura minima y la actual
+		SUBWF TEMP_ACT,W			; Realizamos la resta entre la temperatura minima y la actual	
 		
-		BTFSS STATUS,Z			; Si la temperatura es la minima que deje de decrementar
-		
+		BTFSS STATUS,Z			; Si la temperatura es la minima que deje de decrementar	
 		GOTO ENFRIAR_AGUA_0		; Sino, que continue
 		
 		RETURN
@@ -147,7 +147,7 @@ ENFRIAR_AGUA_0
 		
 ENFRIAR_AGUA_MAS_RAPIDO
 		MOVLW D'4'				; Cargamos el valor a decrementar
-		SUBWF TEMP_ACT,F			; Restamos TEMP_ACT - 5 y lo guardamos en si mismo
+		SUBWF TEMP_ACT,F			; Es como TEMP_ACT = TEMP_ACT - 4
 		RETURN
 
 		
@@ -197,6 +197,7 @@ RETARDO_4
 		GOTO RETARDO_4			; Repetimos la accion hasta que sea 0
 		RETURN
 
+
 ;**************************************************************************
 ; Subrutinas de configuracion de puertos									   
 ;**************************************************************************
@@ -204,11 +205,8 @@ RETARDO_4
 CONFIGURAR_PUERTOS	
 		BSF	STATUS,RP0
 		MOVLW B'11110000'		; Seteamos RB0, RB1, RB2 como salida	
-		MOVWF TRISB
-		
+		MOVWF TRISB			; En TRISB
 		BCF STATUS,RP0
-		MOVLW B'00000000'
-		MOVWF PORTB
 		RETURN
 
 
@@ -217,37 +215,33 @@ CONFIGURAR_PUERTOS
 ;**************************************************************************
 
 LED_RESISTENCIA_APAGADA
-		BCF STATUS,RP0
-		BSF PORTB,0
-		CALL DELAY_250MS
-		BCF PORTB,0
+		BCF STATUS,RP0	; Volvemos al banco 0 para gestionar PORTB
+		BSF PORTB,0		; Habilitamos RB0, es decir, prendemos el LED
+		CALL DELAY_250MS	; Retardo de 250ms
+		BCF PORTB,0		; Deshabilitamos RB0
 		RETURN
 		
 
 ENCENDER_LED_MAXIMO
-		BCF STATUS,RP0
+		BCF STATUS,RP0	; Volvemos al banco 0 para gestionar PORTB
 		BSF PORTB,1		; Habilitamos el pin RB1, es decir, prendemos el LED
-		
-		CALL DELAY_250MS	; Retardo de 1 segundo
-		
-		BCF PORTB,1		; Deshabilitamos el pin RB2
+		CALL DELAY_250MS	; Retardo de 250ms
+		BCF PORTB,1		; Deshabilitamos el pin RB1
 		RETURN
 
 
 LED_RESISTENCIA_PRENDIDA
-		BCF STATUS,RP0
-		BSF PORTB,2
-		CALL DELAY_250MS
-		BCF PORTB,2
+		BCF STATUS,RP0	; Volvemos al banco 0 para gestionar PORTB
+		BSF PORTB,2		; Habilitamos RB2, es decir prendemos el LED
+		CALL DELAY_250MS	; Retardo de 250ms
+		BCF PORTB,2		; Deshabilitamos RB2
 		RETURN
 		
 
 ENCENDER_LED_MINIMO
 		BCF STATUS,RP0	; Volvemos al banco 0 para gestionar PORTB
 		BSF PORTB,3		; Habilitamos el pin RB2, es decir, prendemos el LED
-		
 		CALL DELAY_250MS	; Retardo de 1 segundo
-		
 		BCF PORTB,3		; Deshabilitamos el pin RB2
 		RETURN
 		END
