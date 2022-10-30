@@ -115,6 +115,17 @@ CALENTAR_AGUA_0					; Incrementa desde TEMP_ACT hasta TEMP_MAX (TEMP_ACT < TEMP_
 ;***************************************************************************
 
 ENFRIAR_AGUA						; DECREMENTA DESDE TEMP_MAX hasta TEMP_MIN
+		MOVFW TEMP_MIN			; Cargamos el regisro W con el valor de TEMP_ACT
+		SUBWF TEMP_ACT,W			; Realizamos la resta entre la temperatura minima y la actual
+		
+		BTFSC STATUS,C			; Si la temperatura es la minima que deje de decrementar
+		CALL ENFRIAR_AGUA_0
+
+		CALL ENCENDER_LED_MINIMO	; Que se encienda el LED para avisar que se enfrio
+		
+		RETURN
+
+ENFRIAR_AGUA_0
 		DECF TEMP_ACT,F			; Decrementamos la temperatura en 1
 		CALL LED_RESISTENCIA_APAGADA
 		
@@ -126,12 +137,12 @@ ENFRIAR_AGUA						; DECREMENTA DESDE TEMP_MAX hasta TEMP_MIN
 		
 		BTFSS STATUS,Z			; Si la temperatura es la minima que deje de decrementar
 		
-		GOTO ENFRIAR_AGUA			; Sino, que continue
-		
-		BCF STATUS,Z				; Limpiamos el bit Z del status
-		CALL ENCENDER_LED_MINIMO	; Que se encienda el LED para avisar que se enfrio
+		GOTO ENFRIAR_AGUA_0		; Sino, que continue
 		
 		RETURN
+		
+		
+		
 		
 ENFRIAR_AGUA_MAS_RAPIDO
 		MOVLW D'4'				; Cargamos el valor a decrementar
