@@ -1,4 +1,4 @@
-MPASM  5.31                          MAIN.ASM   10-30-2022  17:02:14         PAGE  1
+MPASM  5.31                          MAIN.ASM   10-30-2022  17:28:51         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -41,13 +41,13 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00026         
                       00027                 CBLOCK 0X20             ; Reservamos una serie de direcciones de memoria para los alias
                       00028                 
-  00000020            00029                 TEMP_ACT                        ; 0x20
-  00000021            00030                 TEMP_MIN                        ; 0x21
+  00000020            00029                 TEMP_ACT                        ; 0x20  Esta temperatura sera dinamica
+  00000021            00030                 TEMP_MIN                        ; 0x21  Estas dos, serviran como limites
   00000022            00031                 TEMP_MAX                        ; 0x22
                       00032                 
-  00000023            00033                 CANILLA_ABIERTA ; 0x23
+  00000023            00033                 CANILLA_ABIERTA ; 0x23  Este registro se ira complementando
                       00034                                 
-  00000024            00035                 CONTADOR1               ; 0x24
+  00000024            00035                 CONTADOR1               ; 0x24  Registros para los retardos
   00000025            00036                 CONTADOR2               ; 0x25
   00000026            00037                 CONTADOR3               ; 0x26
   00000027            00038                 CONTADOR4               ; 0x27
@@ -57,7 +57,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00042                 ORG 0X00
                       00043                 
 0000   2???           00044                 CALL CONFIGURAR_PUERTOS         ; Configuramos los puertos de salida
-MPASM  5.31                          MAIN.ASM   10-30-2022  17:02:14         PAGE  2
+MPASM  5.31                          MAIN.ASM   10-30-2022  17:28:51         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -74,14 +74,14 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00051 ;**************************************************************************
                       00052                                 
 0003                  00053 INICIO  
-0003   09A3           00054                 COMF CANILLA_ABIERTA,F
-0004   2???           00055                 CALL CALENTAR_AGUA      ; Que el agua comience a calentarse hasta el maximo
-0005   2???           00056                 CALL DELAY_5S           ; Una vez que calienta el agua espera 5s
+0003   09A3           00054                 COMF CANILLA_ABIERTA,F  ; Complementa el registro canilla
+0004   2???           00055                 CALL CALENTAR_AGUA              ; Que el agua comience a calentarse hasta el maximo
+0005   2???           00056                 CALL DELAY_5S                   ; Una vez que calienta el agua espera 5s
                       00057                 
-0006   2???           00058                 CALL ENFRIAR_AGUA               ; Que el agua empiece a enfriarse
-0007   2???           00059                 CALL DELAY_5S           ; Una vez que se enfria el agua espera 5s
+0006   2???           00058                 CALL ENFRIAR_AGUA                       ; Que el agua empiece a enfriarse
+0007   2???           00059                 CALL DELAY_5S                   ; Una vez que se enfria el agua espera 5s
                       00060                 
-0008   2???           00061                 GOTO INICIO                     ; Volvemos a inicio, logrando un bucle infinito
+0008   2???           00061                 GOTO INICIO                             ; Volvemos a inicio, logrando un bucle infinito
                       00062 
                       00063 
                       00064 ;***************************************************************************
@@ -116,7 +116,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 0013   1803           00091                 BTFSC STATUS,C          ; Si TEMP_ACT > TEMP_ACT salta
 0014   2???           00092                 CALL CALENTAR_AGUA_0
                       00093 
-MPASM  5.31                          MAIN.ASM   10-30-2022  17:02:14         PAGE  3
+MPASM  5.31                          MAIN.ASM   10-30-2022  17:28:51         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -128,8 +128,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 0016   0008           00096                 RETURN
                       00097                 
                       00098                 
-0017                  00099 CALENTAR_AGUA_0                                 ; Incrementa desde TEMP_ACT hasta TEMP_MAX (TEMP_ACT < T
-                            EMP_MAX)
+0017                  00099 CALENTAR_AGUA_0 
                       00100                 
 0017   0AA0           00101                 INCF TEMP_ACT,F                 ; Vamos subiendo la temperatura actual  
 0018   2???           00102                 CALL LED_RESISTENCIA_PRENDIDA
@@ -148,13 +147,13 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00114 ; Subrutina que decrementa registro TEMP_ACT                                                    
                       00115 ;***************************************************************************
                       00116 
-001E                  00117 ENFRIAR_AGUA                                            ; DECREMENTA DESDE TEMP_MAX hasta TEMP_MIN
-001E   0821           00118                 MOVFW TEMP_MIN                  ; Cargamos el regisro W con el valor de TEMP_ACT
-001F   0220           00119                 SUBWF TEMP_ACT,W                        ; Realizamos la resta entre la temperatura minim
-                            a y la actual
+001E                  00117 ENFRIAR_AGUA
+001E   0821           00118                 MOVFW TEMP_MIN                  ; Verificamos que la temperatura actual sea mayor que
+001F   0220           00119                 SUBWF TEMP_ACT,W                        ; la minima mediante la resta W = TEMP_ACT - TEM
+                            P_MIN
                       00120                 
-0020   1803           00121                 BTFSC STATUS,C                  ; Si la temperatura es la minima que deje de decrementar
-0021   2???           00122                 CALL ENFRIAR_AGUA_0
+0020   1803           00121                 BTFSC STATUS,C                  ; Si la temperatura es menor que la minima, que salte
+0021   2???           00122                 CALL ENFRIAR_AGUA_0             ; Sino que decremente
                       00123 
 0022   2???           00124                 CALL ENCENDER_LED_MINIMO        ; Que se encienda el LED para avisar que se enfrio
                       00125                 
@@ -175,13 +174,13 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00139                 
 002B   2???           00140                 GOTO ENFRIAR_AGUA_0             ; Sino, que continue
                       00141                 
-MPASM  5.31                          MAIN.ASM   10-30-2022  17:02:14         PAGE  4
+002C   0008           00142                 RETURN
+MPASM  5.31                          MAIN.ASM   10-30-2022  17:28:51         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-002C   0008           00142                 RETURN
                       00143                 
                       00144                 
                       00145                 
@@ -197,110 +196,116 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00154 ; Subrutinas de retardo
                       00155 ;**************************************************************************
                       00156 
-0030   30FA           00157 DELAY_1MS       MOVLW D'250'                            ; Cargamos el valor 250 en W    
-0031   00A4           00158                         MOVWF CONTADOR1                 ; Cargamos el valor de W en el primer contador
-                      00159 
-0032   0000           00160 RETARDO_1       NOP
-0033   0BA4           00161                         DECFSZ CONTADOR1,F              ; Decrementamos en 1 el primer contador
-0034   2???           00162                         GOTO RETARDO_1                  ; Repetimos la accion hasta que sea 0
-0035   0008           00163                         RETURN
-                      00164 
-                      00165 
-0036   30FA           00166 DELAY_250MS     MOVLW D'250'                            ; Cargamos el valor 250 en W
-0037   00A5           00167                         MOVWF CONTADOR2                 ; Cargamos el valor de W en el segundo contador
-                      00168 
-0038   2???           00169 RETARDO_2       CALL DELAY_1MS                  ; Esperamos 1 milisegundo por cada
-0039   0BA5           00170                         DECFSZ CONTADOR2,F              ; decremento del segundo contador
-003A   2???           00171                         GOTO RETARDO_2                  ; Repetimos la accion hasta que sea 0
-003B   0008           00172                         RETURN
-                      00173 
-                      00174 
-003C   3004           00175 DELAY_1S                MOVLW D'4'                              ; Cargamos el valor 4 en W
-003D   00A6           00176                         MOVWF CONTADOR3                 ; Cargamos el valor de W en el tercer contador
+0030                  00157 DELAY_1MS       
+0030   30FA           00158                 MOVLW D'250'                            ; Cargamos el valor 250 en W    
+0031   00A4           00159                 MOVWF CONTADOR1                 ; Cargamos el valor de W en el primer contador
+                      00160 
+0032                  00161 RETARDO_1       
+0032   0000           00162                 NOP
+0033   0BA4           00163                 DECFSZ CONTADOR1,F              ; Decrementamos en 1 el primer contador
+0034   2???           00164                 GOTO RETARDO_1                  ; Repetimos la accion hasta que sea 0
+0035   0008           00165                 RETURN
+                      00166 
+                      00167 
+0036                  00168 DELAY_250MS     
+0036   30FA           00169                 MOVLW D'250'                            ; Cargamos el valor 250 en W
+0037   00A5           00170                 MOVWF CONTADOR2                 ; Cargamos el valor de W en el segundo contador
+                      00171 
+0038                  00172 RETARDO_2       
+0038   2???           00173                 CALL DELAY_1MS                  ; Esperamos 1 milisegundo por cada
+0039   0BA5           00174                 DECFSZ CONTADOR2,F              ; decremento del segundo contador
+003A   2???           00175                 GOTO RETARDO_2                  ; Repetimos la accion hasta que sea 0
+003B   0008           00176                 RETURN
                       00177 
-003E   2???           00178 RETARDO_3       CALL DELAY_250MS                        ; Esperamos 250 milisegundos por cada
-003F   0BA6           00179                         DECFSZ CONTADOR3,F              ; decremento del tercer contador (250ms x 4 = 10
-                            00ms)
-0040   2???           00180                         GOTO RETARDO_3                  ; Repetimos la accion hasta que sea 0
-0041   0008           00181                         RETURN
+                      00178 
+003C                  00179 DELAY_1S                
+003C   3004           00180                 MOVLW D'4'                              ; Cargamos el valor 4 en W
+003D   00A6           00181                 MOVWF CONTADOR3                 ; Cargamos el valor de W en el tercer contador
                       00182 
-0042   3005           00183 DELAY_5S                MOVLW D'5'                              ; Cargamos el valor 4 en W
-0043   00A7           00184                         MOVWF CONTADOR4                 ; Cargamos el valor de W en el cuarto contador
-                      00185 
-0044   2???           00186 RETARDO_4       CALL DELAY_1S                   ; Esperamos 1 segundo por cada decremento
-0045   0BA7           00187                         DECFSZ CONTADOR4,F              ; del cuarto contador (1s x 5 = 5s)
-0046   2???           00188                         GOTO RETARDO_4                  ; Repetimos la accion hasta que sea 0
-0047   0008           00189                         RETURN
-                      00190 
-                      00191 ;**************************************************************************
-                      00192 ; Subrutinas de configuracion de puertos                                                                
-MPASM  5.31                          MAIN.ASM   10-30-2022  17:02:14         PAGE  5
+003E                  00183 RETARDO_3       
+003E   2???           00184                 CALL DELAY_250MS                        ; Esperamos 250 milisegundos por cada
+003F   0BA6           00185                 DECFSZ CONTADOR3,F              ; decremento del tercer contador (250ms x 4 = 1000ms)
+0040   2???           00186                 GOTO RETARDO_3                  ; Repetimos la accion hasta que sea 0
+0041   0008           00187                 RETURN
+                      00188 
+0042                  00189 DELAY_5S                
+0042   3005           00190                 MOVLW D'5'                              ; Cargamos el valor 4 en W
+0043   00A7           00191                 MOVWF CONTADOR4                 ; Cargamos el valor de W en el cuarto contador
+                      00192 
+0044                  00193 RETARDO_4       
+0044   2???           00194                 CALL DELAY_1S                   ; Esperamos 1 segundo por cada decremento
+MPASM  5.31                          MAIN.ASM   10-30-2022  17:28:51         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
+0045   0BA7           00195                 DECFSZ CONTADOR4,F              ; del cuarto contador (1s x 5 = 5s)
+0046   2???           00196                 GOTO RETARDO_4                  ; Repetimos la accion hasta que sea 0
+0047   0008           00197                 RETURN
+                      00198 
+                      00199 ;**************************************************************************
+                      00200 ; Subrutinas de configuracion de puertos                                                                
                                        
-                      00193 ;**************************************************************************
-                      00194 
-0048                  00195 CONFIGURAR_PUERTOS      
-0048   1683           00196                 BSF     STATUS,RP0
-0049   30F0           00197                 MOVLW B'11110000'               ; Seteamos RB0, RB1, RB2 como salida    
-004A   0086           00198                 MOVWF TRISB
-                      00199                 
-004B   1283           00200                 BCF STATUS,RP0
-004C   3000           00201                 MOVLW B'00000000'
-004D   0086           00202                 MOVWF PORTB
-004E   0008           00203                 RETURN
-                      00204 
-                      00205 
-                      00206 ;**************************************************************************
-                      00207 ; Subrutinas para encender LEDS                                                                    
-                      00208 ;**************************************************************************
-                      00209 
-004F                  00210 LED_RESISTENCIA_APAGADA
-004F   1283           00211                 BCF STATUS,RP0
-0050   1406           00212                 BSF PORTB,0
-0051   2???           00213                 CALL DELAY_250MS
-0052   1006           00214                 BCF PORTB,0
-0053   0008           00215                 RETURN
-                      00216                 
+                      00201 ;**************************************************************************
+                      00202 
+0048                  00203 CONFIGURAR_PUERTOS      
+0048   1683           00204                 BSF     STATUS,RP0
+0049   30F0           00205                 MOVLW B'11110000'               ; Seteamos RB0, RB1, RB2 como salida    
+004A   0086           00206                 MOVWF TRISB
+                      00207                 
+004B   1283           00208                 BCF STATUS,RP0
+004C   3000           00209                 MOVLW B'00000000'
+004D   0086           00210                 MOVWF PORTB
+004E   0008           00211                 RETURN
+                      00212 
+                      00213 
+                      00214 ;**************************************************************************
+                      00215 ; Subrutinas para encender LEDS                                                                    
+                      00216 ;**************************************************************************
                       00217 
-0054                  00218 ENCENDER_LED_MAXIMO
-0054   1283           00219                 BCF STATUS,RP0
-0055   1486           00220                 BSF PORTB,1             ; Habilitamos el pin RB1, es decir, prendemos el LED
-                      00221                 
-0056   2???           00222                 CALL DELAY_250MS        ; Retardo de 1 segundo
-                      00223                 
-0057   1086           00224                 BCF PORTB,1             ; Deshabilitamos el pin RB2
-0058   0008           00225                 RETURN
-                      00226 
-                      00227 
-0059                  00228 LED_RESISTENCIA_PRENDIDA
-0059   1283           00229                 BCF STATUS,RP0
-005A   1506           00230                 BSF PORTB,2
-005B   2???           00231                 CALL DELAY_250MS
-005C   1106           00232                 BCF PORTB,2
-005D   0008           00233                 RETURN
-                      00234                 
+004F                  00218 LED_RESISTENCIA_APAGADA
+004F   1283           00219                 BCF STATUS,RP0
+0050   1406           00220                 BSF PORTB,0
+0051   2???           00221                 CALL DELAY_250MS
+0052   1006           00222                 BCF PORTB,0
+0053   0008           00223                 RETURN
+                      00224                 
+                      00225 
+0054                  00226 ENCENDER_LED_MAXIMO
+0054   1283           00227                 BCF STATUS,RP0
+0055   1486           00228                 BSF PORTB,1             ; Habilitamos el pin RB1, es decir, prendemos el LED
+                      00229                 
+0056   2???           00230                 CALL DELAY_250MS        ; Retardo de 1 segundo
+                      00231                 
+0057   1086           00232                 BCF PORTB,1             ; Deshabilitamos el pin RB2
+0058   0008           00233                 RETURN
+                      00234 
                       00235 
-005E                  00236 ENCENDER_LED_MINIMO
-005E   1283           00237                 BCF STATUS,RP0  ; Volvemos al banco 0 para gestionar PORTB
-005F   1586           00238                 BSF PORTB,3             ; Habilitamos el pin RB2, es decir, prendemos el LED
-                      00239                 
-0060   2???           00240                 CALL DELAY_250MS        ; Retardo de 1 segundo
-                      00241                 
-0061   1186           00242                 BCF PORTB,3             ; Deshabilitamos el pin RB2
-0062   0008           00243                 RETURN
-                      00244                 
-MPASM  5.31                          MAIN.ASM   10-30-2022  17:02:14         PAGE  6
+0059                  00236 LED_RESISTENCIA_PRENDIDA
+0059   1283           00237                 BCF STATUS,RP0
+005A   1506           00238                 BSF PORTB,2
+005B   2???           00239                 CALL DELAY_250MS
+005C   1106           00240                 BCF PORTB,2
+005D   0008           00241                 RETURN
+                      00242                 
+                      00243 
+005E                  00244 ENCENDER_LED_MINIMO
+005E   1283           00245                 BCF STATUS,RP0  ; Volvemos al banco 0 para gestionar PORTB
+005F   1586           00246                 BSF PORTB,3             ; Habilitamos el pin RB2, es decir, prendemos el LED
+MPASM  5.31                          MAIN.ASM   10-30-2022  17:28:51         PAGE  6
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-3F10                  00245                 END
-MPASM  5.31                          MAIN.ASM   10-30-2022  17:02:14         PAGE  7
+                      00247                 
+0060   2???           00248                 CALL DELAY_250MS        ; Retardo de 1 segundo
+                      00249                 
+0061   1186           00250                 BCF PORTB,3             ; Deshabilitamos el pin RB2
+0062   0008           00251                 RETURN
+3F10                  00252                 END
+MPASM  5.31                          MAIN.ASM   10-30-2022  17:28:51         PAGE  7
 
 
 SYMBOL TABLE
@@ -359,7 +364,7 @@ ENFRIAR_AGUA                      0000001E
 ENFRIAR_AGUA_0                    00000024
 ENFRIAR_AGUA_MAS_RAPIDO           0000002D
 F                                 00000001
-MPASM  5.31                          MAIN.ASM   10-30-2022  17:02:14         PAGE  8
+MPASM  5.31                          MAIN.ASM   10-30-2022  17:28:51         PAGE  8
 
 
 SYMBOL TABLE
@@ -418,7 +423,7 @@ RX9                               00000006
 RX9D                              00000000
 SPBRG                             00000099
 SPEN                              00000007
-MPASM  5.31                          MAIN.ASM   10-30-2022  17:02:14         PAGE  9
+MPASM  5.31                          MAIN.ASM   10-30-2022  17:28:51         PAGE  9
 
 
 SYMBOL TABLE
@@ -477,7 +482,7 @@ VRR                               00000005
 W                                 00000000
 WR                                00000001
 WREN                              00000002
-MPASM  5.31                          MAIN.ASM   10-30-2022  17:02:14         PAGE 10
+MPASM  5.31                          MAIN.ASM   10-30-2022  17:28:51         PAGE 10
 
 
 SYMBOL TABLE

@@ -26,13 +26,13 @@
 	
 		CBLOCK 0x20		; Reservamos una serie de direcciones de memoria para los alias
 		
-		TEMP_ACT			; 0x20
-		TEMP_MIN			; 0x21
+		TEMP_ACT			; 0x20	Esta temperatura sera dinamica
+		TEMP_MIN			; 0x21	Estas dos, serviran como limites
 		TEMP_MAX			; 0x22
 		
-		CANILLA_ABIERTA	; 0x23
+		CANILLA_ABIERTA	; 0x23	Este registro se ira complementando
 				
-		CONTADOR1		; 0x24
+		CONTADOR1		; 0x24	Registros para los retardos
 		CONTADOR2		; 0x25
 		CONTADOR3		; 0x26
 		CONTADOR4		; 0x27
@@ -154,39 +154,47 @@ ENFRIAR_AGUA_MAS_RAPIDO
 ; Subrutinas de retardo
 ;**************************************************************************
 
-DELAY_1MS	MOVLW D'250'				; Cargamos el valor 250 en W	
-			MOVWF CONTADOR1			; Cargamos el valor de W en el primer contador
+DELAY_1MS	
+		MOVLW D'250'				; Cargamos el valor 250 en W	
+		MOVWF CONTADOR1			; Cargamos el valor de W en el primer contador
 
-RETARDO_1	NOP
-			DECFSZ CONTADOR1,F		; Decrementamos en 1 el primer contador
-			GOTO RETARDO_1			; Repetimos la accion hasta que sea 0
-			RETURN
-
-
-DELAY_250MS	MOVLW D'250'				; Cargamos el valor 250 en W
-			MOVWF CONTADOR2			; Cargamos el valor de W en el segundo contador
-
-RETARDO_2	CALL DELAY_1MS			; Esperamos 1 milisegundo por cada
-			DECFSZ CONTADOR2,F		; decremento del segundo contador
-			GOTO RETARDO_2			; Repetimos la accion hasta que sea 0
-			RETURN
+RETARDO_1	
+		NOP
+		DECFSZ CONTADOR1,F		; Decrementamos en 1 el primer contador
+		GOTO RETARDO_1			; Repetimos la accion hasta que sea 0
+		RETURN
 
 
-DELAY_1S		MOVLW D'4'				; Cargamos el valor 4 en W
-			MOVWF CONTADOR3			; Cargamos el valor de W en el tercer contador
+DELAY_250MS	
+		MOVLW D'250'				; Cargamos el valor 250 en W
+		MOVWF CONTADOR2			; Cargamos el valor de W en el segundo contador
 
-RETARDO_3	CALL DELAY_250MS			; Esperamos 250 milisegundos por cada
-			DECFSZ CONTADOR3,F		; decremento del tercer contador (250ms x 4 = 1000ms)
-			GOTO RETARDO_3			; Repetimos la accion hasta que sea 0
-			RETURN
+RETARDO_2	
+		CALL DELAY_1MS			; Esperamos 1 milisegundo por cada
+		DECFSZ CONTADOR2,F		; decremento del segundo contador
+		GOTO RETARDO_2			; Repetimos la accion hasta que sea 0
+		RETURN
 
-DELAY_5S		MOVLW D'5'				; Cargamos el valor 4 en W
-			MOVWF CONTADOR4			; Cargamos el valor de W en el cuarto contador
 
-RETARDO_4	CALL DELAY_1S			; Esperamos 1 segundo por cada decremento
-			DECFSZ CONTADOR4,F		; del cuarto contador (1s x 5 = 5s)
-			GOTO RETARDO_4			; Repetimos la accion hasta que sea 0
-			RETURN
+DELAY_1S		
+		MOVLW D'4'				; Cargamos el valor 4 en W
+		MOVWF CONTADOR3			; Cargamos el valor de W en el tercer contador
+
+RETARDO_3	
+		CALL DELAY_250MS			; Esperamos 250 milisegundos por cada
+		DECFSZ CONTADOR3,F		; decremento del tercer contador (250ms x 4 = 1000ms)
+		GOTO RETARDO_3			; Repetimos la accion hasta que sea 0
+		RETURN
+
+DELAY_5S		
+		MOVLW D'5'				; Cargamos el valor 4 en W
+		MOVWF CONTADOR4			; Cargamos el valor de W en el cuarto contador
+
+RETARDO_4	
+		CALL DELAY_1S			; Esperamos 1 segundo por cada decremento
+		DECFSZ CONTADOR4,F		; del cuarto contador (1s x 5 = 5s)
+		GOTO RETARDO_4			; Repetimos la accion hasta que sea 0
+		RETURN
 
 ;**************************************************************************
 ; Subrutinas de configuracion de puertos									   
@@ -241,5 +249,4 @@ ENCENDER_LED_MINIMO
 		
 		BCF PORTB,3		; Deshabilitamos el pin RB2
 		RETURN
-		
 		END
